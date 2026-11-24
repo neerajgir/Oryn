@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+,     "src/app/sign-in/[[...sign-in]]/sign-in/[[...sign-in]]"  ],
   "exclude": ["node_modules"]
 }
