@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
     >
       <body className="min-h-full flex flex-col">
-        <ClerkProvider>
+        <ClerkProvider afterSignOutUrl="/sign-in">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
