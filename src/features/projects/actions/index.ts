@@ -7,6 +7,12 @@ import { prisma } from "@/lib/db";
 
 
 export const createProject = async (value: string) => {
+    if (typeof value !== "string" || !value.trim()) {
+        return {
+            error: "Prompt is empty",
+        }
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {
@@ -30,8 +36,13 @@ export const createProject = async (value: string) => {
             }
         });
 
-        // TODO: Send the project to the inngest 
-
+        await inngest.send({
+            name: "code-agent/run",
+            data: {
+                value,
+                projectId: project.id
+            }
+        })
         return project;
 
     } catch (error) {

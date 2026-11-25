@@ -1,0 +1,32 @@
+diff --git a/dist/chunk-BSWKEFTT.js b/dist/chunk-BSWKEFTT.js
+index 50538d4bb77d3e16b5bd11daddc519944b3a7325..b6d8908761441d3ffaad6060d3c92b7939e1ed8a 100644
+--- a/dist/chunk-BSWKEFTT.js
++++ b/dist/chunk-BSWKEFTT.js
+@@ -662,6 +662,7 @@ var responseParser4 = (input) => {
+           role: "assistant",
+           type: "tool_call",
+           stop_reason: "tool",
++          thoughtSignature: content.thoughtSignature,
+           tools: [
+             {
+               name: content.functionCall.name,
+@@ -711,7 +712,8 @@ var messageToContent = (m) => {
+                 functionCall: {
+                   name: m.tools[0].name,
+                   args: m.tools[0].input
+-                }
++                },
++                ...(m.thoughtSignature ? { thoughtSignature: m.thoughtSignature } : {})
+               }
+             ]
+           };
+@@ -735,7 +737,8 @@ var messageToContent = (m) => {
+                 functionCall: {
+                   name: m.tools[0].name,
+                   args: m.tools[0].input
+-                }
++                },
++                ...(m.thoughtSignature ? { thoughtSignature: m.thoughtSignature } : {})
+               }
+             ]
+           };
