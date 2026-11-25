@@ -38,7 +38,8 @@ export const codeAgentFunction = inngest.createFunction(
 
     const sandboxId = await step.run("get-sandbox-id", async () => {
       const sandbox = await Sandbox.create({
-        template: "wnopgcecqyx7d1q6qq0u"
+        template: "wnopgcecqyx7d1q6qq0u",
+        network: { allowPublicTraffic: true },
       });
 
       return sandbox.sandboxId;
@@ -69,10 +70,43 @@ export const codeAgentFunction = inngest.createFunction(
       { messages: previousMessages }
     );
 
-    const groqModel = openai({
-      model: "openai/gpt-oss-20b",
-      apiKey: process.env.GROQ_API_KEY!,
-      baseUrl: "https://api.groq.com/openai/v1/",
+    // Per-user BYOK provider (OpenRouter, OpenCode, etc.); falls back to server Groq.
+    const providerConfig = await step.run("resolve-provider", async () => {
+      const project = await prisma.project.findUnique({
+        where: { id: event.data.projectId },
+        include: {
+          user: {
+            select: {
+              llmApiKey: true,
+              llmBaseUrl: true,
+              llmModel: true,
+            },
+          },
+        },
+      });
+
+      const user = project?.user;
+
+      if (user?.llmApiKey) {
+        console.log(`[code-agent] using BYOK provider baseUrl=${user.llmBaseUrl} model=${user.llmModel}`);
+        return {
+          apiKey: user.llmApiKey,
+          baseUrl: user.llmBaseUrl ?? "https://openrouter.ai/api/v1/",
+          model: user.llmModel ?? "openai/gpt-oss-120b",
+        };
+      }
+
+      console.log("[code-agent] no BYOK key, falling back to server Groq");
+
+      return {
+        apiKey: process.env.GROQ_API_KEY!,
+        baseUrl: "https://api.groq.com/openai/v1/",
+        model: "openai/gpt-oss-20b",
+      };
+    });
+
+    const agentModel = openai({
+      ...providerConfig,
       defaultParameters: {
         temperature: 0,
         max_completion_tokens: 8192,
@@ -83,7 +117,7 @@ export const codeAgentFunction = inngest.createFunction(
       name: "code-agent",
       description: "An expert coding agent",
       system: PROMPT,
-      model: groqModel,
+      model: agentModel,
       tools: [
         // 1. Terminal
         createTool({
@@ -226,7 +260,7 @@ export const codeAgentFunction = inngest.createFunction(
     console.log(result)
     const { summary, files } = result.state.data;
 
-    const makeTextAgent = (name: string, system: string) => createAgent({ name, system, model: groqModel });
+    const makeTextAgent = (name: string, system: string) => createAgent({ name, system, model: agentModel });
 
     const fragmentTitleGenerator = makeTextAgent("fragment-title-generator", FRAGMENT_TITLE_PROMPT);
     const responseGenerator = makeTextAgent("response-generator", RESPONSE_PROMPT);

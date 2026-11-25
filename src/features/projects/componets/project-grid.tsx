@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetProjects } from "@/features/projects/hooks/project";
+import { useGetProjects } from "@/features/projects/hooks/projects";
 import { getProjectThumbnailUrl } from "../lib";
 import { cn } from "@/lib/utils";
 

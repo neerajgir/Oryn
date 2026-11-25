@@ -23,6 +23,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // BYOK: user-supplied OpenAI-compatible provider (OpenRouter, OpenCode, etc.)
+  llmApiKey String?
+  llmBaseUrl String?
+  llmModel String?
+
   projects Project[]
 
   @@map("users") 
